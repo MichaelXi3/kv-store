@@ -1,0 +1,27 @@
+# Build artifacts
+/build/
+/bin/
+
+# CMake-generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# VS Code workspace settings
+.vscode/
+
+# Log files
+*.log
+
+# Compiled objects & executables
+*.o
+*.obj
+toy_kv_store
+main
+
+# macOS cruft
+.DS_Store
+
+# Ignore any temporary files
+*~
