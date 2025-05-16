@@ -14,12 +14,16 @@ class KVStore {
         // Durably write by WAL + in-memory insert
         void put(const std::string& key, const std::string& value);
 
-        // In-memory lookup
-        std::string get(const std::string& key);
+        // In-memory lookup MemTable
+        std::optional<std::string> get(const std::string& key);
 
     private:
+        std::string _db_path;
+        std::string _wal_path;
         LogWriter _wal;
         MemTable _memtable;
+
+        void replayWAL();
 };
 
 }

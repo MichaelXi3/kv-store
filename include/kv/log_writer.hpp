@@ -1,5 +1,5 @@
 /**
- * @file log_writter.hpp
+ * @file log_writer.hpp
  *
  * LogWriter is a class that manages the writing of Write-Ahead Log (WAL)
  * Callers just call appendRecord() without worrying about the details of
@@ -13,7 +13,7 @@
  * Used by:
  *  - MemTable: to write WAL records
  */
-
+#pragma once
 #include "kv/file_handle.hpp"
 #include <mutex>
 #include <string>

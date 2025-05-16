@@ -34,6 +34,7 @@ set(SOURCES
     src/file_handle.cpp
     src/log_writer.cpp
     src/memtable.cpp
+    src/kv_store.cpp
 )
 
 # Create the executable
