@@ -19,7 +19,7 @@ KVStore::~KVStore() = default;
 
 // Write to KVStore, first append to WAL, then insert into MemTable
 void KVStore::put(const std::string& key, const std::string& value) {
-    // durable write by WAL
+    // durable write by WAL first
     _wal.appendRecord(key + " " + value + "\n");   
     // in-memory insert to MemTable
     _memtable.put(key, value);
