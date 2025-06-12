@@ -25,4 +25,8 @@ size_t MemTable::size() const {
     return _map.size();
 }
 
+const std::unordered_map<std::string, std::string>& MemTable::data() const {
+    return _map;
+}
+
 }

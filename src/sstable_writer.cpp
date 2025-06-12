@@ -20,7 +20,7 @@ std::string SSTableWriter::makeFileName(uint64_t file_number) const {
     return oss.str();
 }
 
-// TODO: before flush the memtable, compact it
+// TODO: before flush the memtable, sort it and compact it
 bool SSTableWriter::writeSSTable(const std::map<std::string, std::string>& sorted_data, uint64_t file_number) {
     std::string file_name = _data_dir + "/" + makeFileName(file_number);
 
@@ -33,7 +33,7 @@ bool SSTableWriter::writeSSTable(const std::map<std::string, std::string>& sorte
         return false;
     }
 
-    // write [key_len][key_data][value_len][value_data]
+    // write format: [key_len][key_data][value_len][value_data]
     for (const auto& [key, value] : sorted_data) {
         uint32_t key_len = static_cast<uint32_t>(key.size());
         uint32_t value_len = static_cast<uint32_t>(value.size());

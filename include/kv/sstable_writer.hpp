@@ -13,6 +13,8 @@
 #include <map>
 #include <cstdint>
 
+namespace kv {
+
 class SSTableWriter {
 public:
     explicit SSTableWriter(const std::string& data_dir);
@@ -21,5 +23,8 @@ public:
 
 private:
     std::string _data_dir;
+    // make file name according to file number
     std::string makeFileName(uint64_t file_number) const;
-}
+};
+
+} // namespace kv

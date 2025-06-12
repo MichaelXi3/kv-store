@@ -22,6 +22,8 @@ public:
 
     size_t size() const;
 
+    const std::unordered_map<std::string, std::string>& data() const;
+
 private:
     std::unordered_map<std::string, std::string> _map; // Hashmap to store key-value pairs
 };
