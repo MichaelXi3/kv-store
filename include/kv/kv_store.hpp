@@ -14,7 +14,9 @@ class KVStore {
         // Durably write by WAL + in-memory insert
         void put(const std::string& key, const std::string& value);
 
-        // In-memory lookup MemTable
+        // Look up value based on key
+        // - First look-up from in-memory lookup MemTable
+        // - Second look-up from persistent sstables (TODO)
         std::optional<std::string> get(const std::string& key);
 
     private:

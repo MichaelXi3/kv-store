@@ -1,13 +1,35 @@
 #include "kv/file_handle.hpp"
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 
 namespace kv {
 
 // Constructor: Opens the file in append mode
 FileHandle::FileHandle(const std::string& filePath) 
     : _filePath {filePath} {
+    
+    std::cout << "DEBUG: FileHandle created for: " << filePath << std::endl;
+    
+    // Check if directory exists
+    std::filesystem::path file_path(filePath);
+    std::filesystem::path parent_dir = file_path.parent_path();
+    
+    if (!std::filesystem::exists(parent_dir)) {
+        std::cout << "DEBUG: Race! Parent db directory doesn't exist yet: " << parent_dir << std::endl;
+        std::filesystem::create_directories(parent_dir);
+        std::cout << "DEBUG: Created parent directory" << std::endl;
+    }
+    
     _file.open(filePath, std::ios::app); // Open file in append mode
+    std::cout << "DEBUG: File is " << (_file.is_open() ? "OPEN" : "CLOSED") << std::endl;
+    
+    if (!_file.is_open()) {
+        std::cout << "DEBUG: Failed to open file. Error flags: " << std::endl;
+        std::cout << "  failbit: " << _file.fail() << std::endl;
+        std::cout << "  badbit: " << _file.bad() << std::endl;
+        std::cout << "  eofbit: " << _file.eof() << std::endl;
+    }
 };
 
 // Destructor: Closes the file

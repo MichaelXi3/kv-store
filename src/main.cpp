@@ -17,15 +17,15 @@ void setupTestDir() {
 }
 
 void cleanupTestDir() {
-    if (std::filesystem::exists(TEST_DIR)) {
-        std::filesystem::remove_all(TEST_DIR);
-        std::cout << "Cleaned up test directory: " << TEST_DIR << std::endl;
-    }
+    // if (std::filesystem::exists(TEST_DIR)) {
+    //     std::filesystem::remove_all(TEST_DIR);
+    //     std::cout << "Cleaned up test directory: " << TEST_DIR << std::endl;
+    // }
 }
 
 void testFileHandle() {
     std::cout << "\n--- Testing FileHandle ---" << std::endl;
-    kv::FileHandle fd(TEST_DIR + "/filehandle_test.log");
+    kv::FileHandle fd(TEST_DIR + "/test_filehandle.log");
     std::string data = "put(Michael, 1)\n";
 
     for (int i = 0; i < 5; ++i) {
@@ -37,7 +37,7 @@ void testFileHandle() {
 
 void testLogWriter() {
     std::cout << "\n--- Testing LogWriter ---" << std::endl;
-    kv::LogWriter logWriter(TEST_DIR + "/logwriter_test.log");
+    kv::LogWriter logWriter(TEST_DIR + "/test_logwriter.log");
     std::string data = "put(Michael, 1)\n";
     logWriter.appendRecord(data);
     std::cout << "LogWriter test completed." << std::endl;
@@ -63,10 +63,10 @@ void testMemTable() {
 
 void testKVStore() {
     std::cout << "\n--- Testing KVStore ---" << std::endl;
-    std::string db_path = TEST_DIR + "/testdb";
+    std::string kvstore_path = TEST_DIR + "/test_kvstore_db";
     
     {
-        kv::KVStore store(db_path);
+        kv::KVStore store(kvstore_path);
         store.put("Alice", "100");
         store.put("Bob", "200");
         store.put("Alice", "300");
@@ -80,10 +80,10 @@ void testKVStore() {
         std::cout << "Key: Charlie, Value: " << (val3 ? *val3 : "<not found>") << std::endl;
     }
 
-    // Test WAL replay
+    // Test WAL replay = = SIMULATED PROCESS RESTART
     std::cout << "\n--- Testing KVStore WAL Replay ---" << std::endl;
     {
-        kv::KVStore store2(db_path); // This should replay the WAL
+        kv::KVStore store2(kvstore_path); // This should replay the WAL
         auto val1_replay = store2.get("Alice");
         auto val2_replay = store2.get("Bob");
         std::cout << "After replay - Key: Alice, Value: " << (val1_replay ? *val1_replay : "<not found>") << std::endl;
@@ -98,8 +98,9 @@ void testFlusher() {
     auto mem = std::make_shared<kv::MemTable>();
     std::mutex active_mtx, immu_mtx;
     
-    // 2) Init writer, and flusher thread
-    kv::SSTableWriter writer(TEST_DIR + "/data");
+    // 2) Init writer for test SSTable files
+    std::string test_sstable_dir = TEST_DIR + "/test_sstables";
+    kv::SSTableWriter writer(test_sstable_dir);
     kv::Flusher flusher(mem, active_mtx, immu_mtx, writer, 100);
     flusher.start();
     
@@ -115,6 +116,7 @@ void testFlusher() {
     // 4) Stop the flusher
     flusher.stop();
     std::cout << "Flusher test completed." << std::endl;
+    std::cout << "SSTable files written to: " << test_sstable_dir << std::endl;
 }
 
 int main() {
