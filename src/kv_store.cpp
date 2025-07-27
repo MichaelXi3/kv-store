@@ -9,11 +9,16 @@ KVStore::KVStore(const std::string& db_path)
     : _db_path {db_path},
       _wal_path {db_path + "/wal.log"},     // WAL inside the directory
       _wal {_wal_path},
-      _memtable {} {
-    // Create db directory if it doesn't exist
+      _memtable {},
+      _reader {db_path}
+{
+    // (1) Create db directory if it doesn't exist
     std::filesystem::create_directories(db_path);
+
+    // (2) SSTables min/max key indexes are automatically loaded in SSTableReader constructor
+    
+    // (3) Replay WAL to restore in-memory state
     std::cout << "DEBUG: KVStore created with WAL path: " << _wal_path << std::endl;
-    // Replay WAL to restore in-memory state
     replayWAL();
 }
 
@@ -32,7 +37,15 @@ void KVStore::put(const std::string& key, const std::string& value) {
 
 // In-memory lookup MemTable
 std::optional<std::string> KVStore::get(const std::string& key) {
-    return _memtable.get(key);
+    // Search in-memory hash table
+    if (auto v = _memtable.get(key)) {
+        std::cout << "DEBUG: KVStore::get() - Found key '" << key << "' in in-memory hash table" << std::endl;
+        return v;
+    }
+    
+    std::cout << "DEBUG: KVStore::get() - Key '" << key << "' not found in memory, scanning on-disk SSTables" << std::endl;
+    // Fall back to SSTables read
+    return _reader.get(key);
 }
 
 // Replay WAL to restore in-memory state

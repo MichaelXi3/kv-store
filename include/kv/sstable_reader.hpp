@@ -14,24 +14,34 @@
  */
 #pragma once
 #include <string>
+#include <optional>
+#include <vector>
+#include <filesystem>
 
 namespace kv {
+
+struct SSTableMeta {
+    std::string filename;
+    std::string min_key, max_key;
+};
 
 class SSTableReader {
 public:
     explicit SSTableReader(const std::string& data_dir);
 
-    // interface api for read value based on key
-    std::optional<std::string> get_from_sstable(const std::string& key);
+    // Scan SSTables newest -> oldest
+    std::optional<std::string> get(const std::string& key) const;
 
 private:
+    // Scan and build SSTables _tables[] cache (newest first)
+    void loadAllTables();
+
+    // Read from a single SSTable file
+    std::optional<std::string>
+    readOneSSTable(const SSTableMeta& sstable_meta, const std::string& key) const;
+
     std::string _data_dir;
-
-    // Discover and cache SSTable file list (newest first)
-    std::vector<std::string> getSSTableFiles() const;
-
-    // Read from a specific SSTable
-    std::optional<std::string> readFromSSTable(std::string& sstable_name, std::string& key);
+    std::vector<SSTableMeta> _tables;
 };
 
 } // namespace kv

@@ -39,9 +39,15 @@ Phase 4: SSTable complete
 ```
 
 ### Implementation Details
-Current Implementation:
+Current Implementation Limitations:
 - K/V are string only
 - memtable is implemented as MemTable
+
+ToDos util MVP:
+- KVsore ReaSSTableReader ✓
+- Build SSTable min/max_key index during KVStore constructor ✓
+- Delete: tombstone
+- Compaction: SSTable compaction when table cnt exceeds threshold
 
 Future Enhancement:
 - K/V can be any type

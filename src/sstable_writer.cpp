@@ -20,7 +20,6 @@ std::string SSTableWriter::makeFileName(uint64_t file_number) const {
     return oss.str();
 }
 
-// TODO: before flush the memtable, sort it and compact it
 bool SSTableWriter::writeSSTable(const std::map<std::string, std::string>& sorted_data, uint64_t file_number) {
     std::string file_name = _data_dir + "/" + makeFileName(file_number);
 

@@ -2,6 +2,7 @@
 #include "kv/memtable.hpp"
 #include "kv/file_handle.hpp"
 #include "kv/log_writer.hpp"
+#include "kv/sstable_reader.hpp"
 
 namespace kv {
 
@@ -24,6 +25,7 @@ class KVStore {
         std::string _wal_path;
         LogWriter _wal;
         MemTable _memtable;
+        SSTableReader _reader;
 
         void replayWAL();
 };
