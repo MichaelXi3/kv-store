@@ -46,10 +46,11 @@ Current Implementation Limitations:
 ToDos util MVP:
 - KVsore ReaSSTableReader ✓
 - Build SSTable min/max_key index during KVStore constructor ✓
-- Delete: tombstone
+- Delete: tombstone ✓
 - Compaction: SSTable compaction when table cnt exceeds threshold
 
 Future Enhancement:
 - K/V can be any type
 - memtable implemented using skipList
 - Multi-thread flushing
+- Logging level configs

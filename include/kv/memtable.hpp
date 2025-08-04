@@ -17,11 +17,11 @@ public:
     MemTable();
     ~MemTable() = default;
 
+    // Put and get operations
     void put(const std::string& key, const std::string& value);
     std::optional<std::string> get(const std::string& key) const;
 
     size_t size() const;
-
     const std::unordered_map<std::string, std::string>& data() const;
 
 private:

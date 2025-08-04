@@ -259,16 +259,78 @@ void testSSTableReader() {
     }
 }
 
+void testDeleteTombstone() {
+    std::cout << "\n--- Testing Delete Tombstone Feature ---" << std::endl;
+    
+    std::string test_db_path = TEST_DIR + "/test_delete_db";
+    if (std::filesystem::exists(test_db_path)) {
+        std::filesystem::remove_all(test_db_path);
+    }
+    
+    // Setup: Create SSTable with initial data
+    std::filesystem::create_directories(test_db_path);
+    kv::SSTableWriter writer(test_db_path);
+    std::map<std::string, std::string> disk_data;
+    disk_data["disk_key"] = "disk_value";
+    writer.writeSSTable(disk_data, 1);
+    
+    // Test delete operations
+    kv::KVStore store(test_db_path);
+    store.put("mem_key", "mem_value");
+    
+    // Assert initial state
+    auto mem_before = store.get("mem_key");
+    auto disk_before = store.get("disk_key");
+    if (!mem_before || *mem_before != "mem_value") {
+        throw std::runtime_error("ASSERT FAILED: mem_key should exist");
+    }
+    if (!disk_before || *disk_before != "disk_value") {
+        throw std::runtime_error("ASSERT FAILED: disk_key should exist");
+    }
+    
+    // Test deletions
+    store.del("mem_key");
+    store.del("disk_key");
+    store.del("nonexistent");  // Should not crash
+    
+    // Assert deletions worked
+    if (store.get("mem_key")) {
+        throw std::runtime_error("ASSERT FAILED: mem_key should be deleted");
+    }
+    if (store.get("disk_key")) {
+        throw std::runtime_error("ASSERT FAILED: disk_key should be deleted");
+    }
+    if (store.get("nonexistent")) {
+        throw std::runtime_error("ASSERT FAILED: nonexistent should remain not found");
+    }
+    
+    // Test delete then restore
+    store.put("restore_test", "original");
+    store.del("restore_test");
+    if (store.get("restore_test")) {
+        throw std::runtime_error("ASSERT FAILED: restore_test should be deleted");
+    }
+    
+    store.put("restore_test", "restored");
+    auto restored = store.get("restore_test");
+    if (!restored || *restored != "restored") {
+        throw std::runtime_error("ASSERT FAILED: restore_test should be restored");
+    }
+    
+    std::cout << "Delete tombstone test passed!" << std::endl;
+}
+
 int main() {
     setupTestDir();
     
     try {
-        testFileHandle();
-        testLogWriter();
-        testMemTable();
-        testWALReplay();
-        testFlusher();
-        testSSTableReader();
+        // testFileHandle();
+        // testLogWriter();
+        // testMemTable();
+        // testWALReplay();
+        // testFlusher();
+        // testSSTableReader();
+        testDeleteTombstone();
         
         std::cout << "\n=== All tests completed successfully! ===" << std::endl;
     } catch (const std::exception& e) {

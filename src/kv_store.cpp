@@ -39,13 +39,23 @@ void KVStore::put(const std::string& key, const std::string& value) {
 std::optional<std::string> KVStore::get(const std::string& key) {
     // Search in-memory hash table
     if (auto v = _memtable.get(key)) {
+        if (*v == TOMB_STONE) {
+            std::cout << "DEBUG: KVStore::get() - key has been deleted in MemTable" << std::endl;
+            return std::nullopt;
+        }
         std::cout << "DEBUG: KVStore::get() - Found key '" << key << "' in in-memory hash table" << std::endl;
         return v;
     }
-    
     std::cout << "DEBUG: KVStore::get() - Key '" << key << "' not found in memory, scanning on-disk SSTables" << std::endl;
+
     // Fall back to SSTables read
-    return _reader.get(key);
+    auto result = _reader.get(key);
+    if (result && *result == TOMB_STONE) {
+            std::cout << "DEBUG: KVStore::get() - key has been deleted in SSTables" << std::endl;
+            return std::nullopt;
+    }
+    std::cout << "DEBUG: KVStore::get() - Found key '" << key << "' in SSTables" << std::endl;
+    return result;
 }
 
 // Replay WAL to restore in-memory state
@@ -70,4 +80,9 @@ void KVStore::replayWAL() {
     std::cout << "DEBUG: WAL replay completed, processed " << line_count << " lines" << std::endl;
 }
 
+void KVStore::del(const std::string& key) {
+    std::string record = key + " " + TOMB_STONE + "\n";
+    _wal.appendRecord(record);   
+    _memtable.put(key, TOMB_STONE);
+}
 }

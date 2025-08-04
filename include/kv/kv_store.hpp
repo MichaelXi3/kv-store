@@ -6,6 +6,8 @@
 
 namespace kv {
 
+const std::string TOMB_STONE = "__TOMBSTONE__";
+
 class KVStore {
     public:
         // constructor and destructor
@@ -19,6 +21,9 @@ class KVStore {
         // - First look-up from in-memory lookup MemTable
         // - Second look-up from persistent sstables (TODO)
         std::optional<std::string> get(const std::string& key);
+        
+        // Delete a key by placing a tombstone
+        void del(const std::string& key);
 
     private:
         std::string _db_path;

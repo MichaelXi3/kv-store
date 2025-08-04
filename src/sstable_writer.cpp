@@ -14,13 +14,17 @@ SSTableWriter::SSTableWriter(const std::string& data_dir)
 }
 
 // turn file_number to 8 digits file name
-std::string SSTableWriter::makeFileName(uint64_t file_number) const {
+std::string
+SSTableWriter::makeFileName(uint64_t file_number) const 
+{
     std::ostringstream oss; // use oss to build string
     oss << std::setw(8) << std::setfill('0') << file_number << ".sst";
     return oss.str();
 }
 
-bool SSTableWriter::writeSSTable(const std::map<std::string, std::string>& sorted_data, uint64_t file_number) {
+bool
+SSTableWriter::writeSSTable(const std::map<std::string, std::string>& sorted_data, uint64_t file_number)
+{
     std::string file_name = _data_dir + "/" + makeFileName(file_number);
 
     // std::ios::binary: Opens the file for binary (raw byte) input/output, preventing character translations.
