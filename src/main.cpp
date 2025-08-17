@@ -662,15 +662,15 @@ int main() {
     setupTestDir();
     
     try {
-        // testFileHandle();
-        // testLogWriter();
-        // testMemTable();
-        // testWALReplay();
-        // testFlusher();
-        // testSSTableReader();
-        // testDeleteTombstone();
-        // testCompactorFileDiscovery();
-        // testCompactorThreadLifecycle();
+        testFileHandle();
+        testLogWriter();
+        testMemTable();
+        testWALReplay();
+        testFlusher();
+        testSSTableReader();
+        testDeleteTombstone();
+        testCompactorFileDiscovery();
+        testCompactorThreadLifecycle();
         testCompactorWorkflowAndInteractions();
         
         std::cout << "\n=== All tests completed successfully! ===" << std::endl;
