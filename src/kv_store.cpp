@@ -5,12 +5,13 @@
 namespace kv {
 
 // Constructor
-KVStore::KVStore(const std::string& db_path)
+KVStore::KVStore(const std::string& db_path, std::shared_ptr<LockManager> lock_mgr)
     : _db_path {db_path},
       _wal_path {db_path + "/wal.log"},     // WAL inside the directory
       _wal {_wal_path},
       _memtable {},
-      _reader {db_path}
+      _reader {db_path, lock_mgr},
+      _lock_mgr {lock_mgr}
 {
     // (1) Create db directory if it doesn't exist
     std::filesystem::create_directories(db_path);
@@ -84,5 +85,10 @@ void KVStore::del(const std::string& key) {
     std::string record = key + " " + TOMB_STONE + "\n";
     _wal.appendRecord(record);   
     _memtable.put(key, TOMB_STONE);
+}
+
+void KVStore::refreshSSTableMetadata() {
+    std::cout << "DEBUG: KVStore::refreshSSTableMetadata() - Refreshing SSTable metadata" << std::endl;
+    _reader.refreshMetadata();
 }
 }

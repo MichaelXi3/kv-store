@@ -17,6 +17,7 @@
 #include <optional>
 #include <vector>
 #include <filesystem>
+#include "kv/lock_manager.hpp"
 
 namespace kv {
 
@@ -27,10 +28,13 @@ struct SSTableMeta {
 
 class SSTableReader {
 public:
-    explicit SSTableReader(const std::string& data_dir);
+    explicit SSTableReader(const std::string& data_dir, std::shared_ptr<LockManager> lock_mgr);
 
     // Scan SSTables newest -> oldest
     std::optional<std::string> get(const std::string& key) const;
+    
+    // Refresh metadata after SSTables are modified (called by compactor/flusher)
+    void refreshMetadata();
 
 private:
     // Scan and build SSTables _tables[] cache (newest first)
@@ -42,6 +46,7 @@ private:
 
     std::string _data_dir;
     std::vector<SSTableMeta> _tables;
+    std::shared_ptr<LockManager> _lock_mgr;
 };
 
 } // namespace kv

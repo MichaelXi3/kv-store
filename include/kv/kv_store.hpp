@@ -3,6 +3,7 @@
 #include "kv/file_handle.hpp"
 #include "kv/log_writer.hpp"
 #include "kv/sstable_reader.hpp"
+#include "kv/lock_manager.hpp"
 
 namespace kv {
 
@@ -11,7 +12,7 @@ const std::string TOMB_STONE = "__TOMBSTONE__";
 class KVStore {
     public:
         // constructor and destructor
-        explicit KVStore(const std::string& db_path);
+        explicit KVStore(const std::string& db_path, std::shared_ptr<LockManager> lock_mgr);
         ~KVStore();
 
         // Durably write by WAL + in-memory insert
@@ -24,6 +25,9 @@ class KVStore {
         
         // Delete a key by placing a tombstone
         void del(const std::string& key);
+        
+        // Refresh SSTable metadata (called after compaction)
+        void refreshSSTableMetadata();
 
     private:
         std::string _db_path;
@@ -31,6 +35,7 @@ class KVStore {
         LogWriter _wal;
         MemTable _memtable;
         SSTableReader _reader;
+        std::shared_ptr<LockManager> _lock_mgr;
 
         void replayWAL();
 };

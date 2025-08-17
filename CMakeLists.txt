@@ -38,6 +38,7 @@ set(SOURCES
     src/sstable_reader.cpp
     src/sstable_writer.cpp
     src/flusher.cpp
+    src/compactor.cpp
 )
 
 # Create the executable

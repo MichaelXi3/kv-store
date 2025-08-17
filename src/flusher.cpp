@@ -4,11 +4,12 @@
 
 namespace kv {
 
-Flusher::Flusher(std::shared_ptr<MemTable>& active_table,
-                 std::mutex&               active_table_mutex,
-                 std::mutex&               immu_table_mutex,
-                 SSTableWriter&            writer,
-                 uint64_t                  threshold)
+Flusher::Flusher(std::shared_ptr<MemTable>&     active_table,
+                 std::mutex&                    active_table_mutex,
+                 std::mutex&                    immu_table_mutex,
+                 SSTableWriter&                 writer,
+                 uint64_t                       threshold,
+                 std::shared_ptr<LockManager>   _lock_mgr)
     : active_table(active_table)
     , active_table_mutex(active_table_mutex)
     , writer(writer)
@@ -16,6 +17,7 @@ Flusher::Flusher(std::shared_ptr<MemTable>& active_table,
     , running(false)
     , immu_table_mutex(immu_table_mutex)
     , next_file_number(1)
+    , lock_mgr(_lock_mgr)
 {}
 
 Flusher::~Flusher() {
@@ -41,12 +43,12 @@ void Flusher::run() {
         bool should_flush = false;
         // Step 1: Check and swap active to immu_table
         {
-            std::lock_guard lk(active_table_mutex);
+            lock_mgr->acquireMemTableLock(active_table_mutex);
             // check if memstable flush is needed
             if (active_table->size() >= threshold) {
                 // freeze the active_table
                 {
-                    std::lock_guard lk2(immu_table_mutex);
+                    lock_mgr->acquireMemTableLock(immu_table_mutex);
                     immutable_table = active_table;
                 } // drop immu_table_mutex
                 // redirect write to new table
@@ -59,7 +61,7 @@ void Flusher::run() {
         if (should_flush) {
             std::shared_ptr<MemTable> table_to_flush;
             {
-                std::lock_guard lk(immu_table_mutex);
+                lock_mgr->acquireMemTableLock(immu_table_mutex);
                 table_to_flush = immutable_table;
             }
             if (table_to_flush) {
@@ -69,12 +71,15 @@ void Flusher::run() {
                     sorted_data.emplace(k, v);
                 }
                 // write SSTable
-                uint64_t sst_file_no = next_file_number.fetch_add(1);
-                writer.writeSSTable(sorted_data, sst_file_no);
+                {
+                    auto sstable_write_lock = lock_mgr->acquireSSTableWriteLock();
+                    uint64_t sst_file_no = next_file_number.fetch_add(1);
+                    writer.writeSSTable(sorted_data, sst_file_no);
+                }
 
                 // relase the immu_table
                 {
-                    std::lock_guard lk(immu_table_mutex);
+                    lock_mgr->acquireMemTableLock(immu_table_mutex);
                     immutable_table.reset();
                 }
             }
@@ -85,7 +90,7 @@ void Flusher::run() {
 
     // Final cleanup in case anything is left before stop
     {
-        std::lock_guard lk(immu_table_mutex);
+        lock_mgr->acquireMemTableLock(immu_table_mutex);
         if (immutable_table) {
             std::map<std::string, std::string> sorted_data;
             for (auto& [k, v] : immutable_table->data())

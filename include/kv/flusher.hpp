@@ -8,6 +8,7 @@
 #include <thread>
 #include "kv/memtable.hpp"
 #include "kv/sstable_writer.hpp"
+#include "kv/lock_manager.hpp"
 
 namespace kv {
 
@@ -17,7 +18,8 @@ public:
             std::mutex& active_table_mutex,
             std::mutex& immu_table_mutex,
             SSTableWriter& writer,
-            uint64_t threshold);
+            uint64_t threshold,
+            std::shared_ptr<LockManager> lock_mgr);
     
     ~Flusher();
 
@@ -44,6 +46,8 @@ private:
     std::condition_variable immu_cv;
 
     std::atomic<uint64_t> next_file_number;
+
+    std::shared_ptr<LockManager> lock_mgr;
 };
 
 }

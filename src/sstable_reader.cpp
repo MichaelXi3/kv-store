@@ -5,8 +5,8 @@
 namespace kv {
 
 // Constructor: scan all SSTables and build SSTableMeta vector
-SSTableReader::SSTableReader(const std::string& data_dir) 
-    : _data_dir(data_dir) 
+SSTableReader::SSTableReader(const std::string& data_dir, std::shared_ptr<LockManager> lock_mgr) 
+    : _data_dir(data_dir), _lock_mgr(lock_mgr)
 {
     loadAllTables();
 }
@@ -73,6 +73,8 @@ SSTableReader::loadAllTables()
 std::optional<std::string>
 SSTableReader::get(const std::string& key) const
 {
+    auto lock = _lock_mgr->acquireSSTableReadLock();
+
     std::cout << "DEBUG: SSTableReader::get() - Searching for key '" << key << "' across " << _tables.size() << " SSTables" << std::endl;
     
     // Search through all SSTables metas from newest to oldest
@@ -91,6 +93,13 @@ SSTableReader::get(const std::string& key) const
     
     std::cout << "DEBUG: SSTableReader::get() - Key '" << key << "' not found in any SSTable" << std::endl;
     return std::nullopt;
+}
+
+// Public method to refresh metadata (called after compaction/flush)
+void SSTableReader::refreshMetadata() {
+    std::cout << "DEBUG: SSTableReader::refreshMetadata() - Reloading SSTable metadata" << std::endl;
+    loadAllTables();
+    std::cout << "DEBUG: SSTableReader::refreshMetadata() - Loaded " << _tables.size() << " SSTable files" << std::endl;
 }
 
 std::optional<std::string>
